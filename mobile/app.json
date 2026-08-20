@@ -1,0 +1,51 @@
+{
+  "expo": {
+    "name": "Aadhi Bhairava Cow Farm",
+    "slug": "aadhi-bhairava-cow-farm-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1B4332"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.cowfarm.smartdairy",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app requires camera permissions to scan cow tags and document veterinary receipts.",
+        "NSPhotoLibraryUsageDescription": "This app requires photo library permissions to upload cow profile images.",
+        "NSLocationWhenInUseUsageDescription": "This app uses location to verify check-in at the dairy farm coordinates."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1B4332"
+      },
+      "package": "com.cowfarm.smartdairy",
+      "permissions": [
+        "CAMERA",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "FOREGROUND_SERVICE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Aadhi Bhairava Cow Farm to access your camera to scan QR barcodes."
+        }
+      ]
+    ],
+    "scheme": "cowfarm"
+  }
+}

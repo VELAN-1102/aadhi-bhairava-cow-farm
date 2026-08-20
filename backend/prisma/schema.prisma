@@ -1,0 +1,475 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// User Management & RBAC
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  phone        String?
+  avatarUrl    String?
+  roleId       String
+  role         Role          @relation(fields: [roleId], references: [id])
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  employees    Employee[]
+  auditLogs    AuditLog[]
+  activityLogs ActivityLog[]
+  expenses     Expense[]
+  incomes      Income[]
+  notifications Notification[]
+  reports      Report[]
+}
+
+model Role {
+  id          String           @id @default(uuid())
+  name        String           @unique // e.g. ADMINISTRATOR, FARM_OWNER, FARM_MANAGER, VETERINARIAN, MILK_COLLECTION_OFFICER, INVENTORY_MANAGER, FINANCE_MANAGER, EMPLOYEE, CUSTOMER, VIEWER
+  description String?
+  users       User[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  name        String           @unique // e.g. READ_COWS, CREATE_COWS, EDIT_COWS, DELETE_COWS
+  description String?
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  id           String     @id @default(uuid())
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+// Employee Management
+model Employee {
+  id          String       @id @default(uuid())
+  userId      String?      @unique
+  user        User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  name        String
+  email       String       @unique
+  phone       String
+  designation String
+  department  String
+  joinDate    DateTime
+  salary      Decimal      @db.Decimal(10, 2)
+  status      String       @default("ACTIVE") // ACTIVE, INACTIVE, LEAVE
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  attendance  Attendance[]
+  payrolls    Payroll[]
+  tasks       Task[]
+}
+
+model Attendance {
+  id         String   @id @default(uuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  date       DateTime @db.Date
+  checkIn    DateTime?
+  checkOut   DateTime?
+  status     String   @default("PRESENT") // PRESENT, ABSENT, LEAVE, LATE
+  notes      String?
+}
+
+model Payroll {
+  id              String    @id @default(uuid())
+  employeeId      String
+  employee        Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  payPeriodStart  DateTime  @db.Date
+  payPeriodEnd    DateTime  @db.Date
+  basicSalary     Decimal   @db.Decimal(10, 2)
+  allowances      Decimal   @default(0) @db.Decimal(10, 2)
+  deductions      Decimal   @default(0) @db.Decimal(10, 2)
+  netSalary       Decimal   @db.Decimal(10, 2)
+  status          String    @default("PENDING") // PAID, PENDING
+  paymentDate     DateTime?
+  createdAt       DateTime  @default(now())
+}
+
+model Task {
+  id           String    @id @default(uuid())
+  title        String
+  description  String?
+  assignedToId String
+  assignedTo   Employee  @relation(fields: [assignedToId], references: [id], onDelete: Cascade)
+  status       String    @default("TODO") // TODO, IN_PROGRESS, COMPLETED, OVERDUE
+  priority     String    @default("MEDIUM") // LOW, MEDIUM, HIGH
+  dueDate      DateTime
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+// Cow Breeds & Cow Management
+model CowBreed {
+  id          String   @id @default(uuid())
+  name        String   @unique // Gir, Sahiwal, Hallikar, Ongole, Jersey, Holstein Friesian, HF Cross, Murrah Buffalo
+  description String?
+  cows        Cow[]
+}
+
+model Cow {
+  id              String             @id @default(uuid())
+  tagNumber       String             @unique
+  name            String
+  breedId         String
+  breed           CowBreed           @relation(fields: [breedId], references: [id])
+  gender          String             @default("FEMALE") // MALE, FEMALE
+  dateOfBirth     DateTime
+  weight          Decimal            @db.Decimal(6, 2) // kg
+  color           String
+  status          String             @default("HEALTHY") // HEALTHY, SICK, PREGNANT, DRY, LACTATING, CALF
+  purchaseDate    DateTime?
+  purchasePrice   Decimal?           @db.Decimal(10, 2)
+  insuranceNumber String?
+  fatherTag       String?
+  motherTag       String?
+  breedDetail     String?            // Custom description or JSON string
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  images          CowImage[]
+  vaccinations    Vaccination[]
+  medicalRecords  MedicalRecord[]
+  pregnancies     Pregnancy[]
+  calvingHistories CalvingHistory[]
+  milkCollections MilkCollection[]
+  aiRecommendations AIRecommendation[]
+}
+
+model CowImage {
+  id        String   @id @default(uuid())
+  cowId     String
+  cow       Cow      @relation(fields: [cowId], references: [id], onDelete: Cascade)
+  imageUrl  String
+  isCover   Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Vaccination {
+  id               String    @id @default(uuid())
+  cowId            String
+  cow              Cow       @relation(fields: [cowId], references: [id], onDelete: Cascade)
+  vaccineName      String
+  administeredDate DateTime?
+  dueDate          DateTime
+  status           String    @default("PENDING") // PENDING, COMPLETED, OVERDUE
+  administeredBy   String?   // Employee name or id reference
+  notes            String?
+}
+
+model MedicalRecord {
+  id           String      @id @default(uuid())
+  cowId        String
+  cow          Cow         @relation(fields: [cowId], references: [id], onDelete: Cascade)
+  date         DateTime
+  diagnosis    String
+  treatment    String
+  doctorName   String
+  prescription String?
+  cost         Decimal     @default(0) @db.Decimal(10, 2)
+  status       String      @default("CLOSED") // OPEN, CLOSED
+  notes        String?
+  treatments   Treatment[]
+}
+
+model Disease {
+  id          String      @id @default(uuid())
+  name        String      @unique
+  description String?
+  symptoms    String?
+  severity    String      @default("LOW") // LOW, MEDIUM, HIGH
+  treatments  Treatment[]
+}
+
+model Treatment {
+  id              String        @id @default(uuid())
+  medicalRecordId String
+  medicalRecord   MedicalRecord @relation(fields: [medicalRecordId], references: [id], onDelete: Cascade)
+  diseaseId       String
+  disease         Disease       @relation(fields: [diseaseId], references: [id])
+  medicationName  String
+  dosage          String
+  startDate       DateTime
+  endDate         DateTime
+  notes           String?
+}
+
+model Pregnancy {
+  id                  String           @id @default(uuid())
+  cowId               String
+  cow                 Cow              @relation(fields: [cowId], references: [id], onDelete: Cascade)
+  breedingDate        DateTime
+  breedingMethod      String           @default("AI") // AI (Artificial Insemination), NATURAL
+  bullTag             String?
+  expectedCalvingDate DateTime
+  status              String           @default("ACTIVE") // ACTIVE, COMPLETED, ABORTED
+  notes               String?
+  calvingHistories    CalvingHistory[]
+}
+
+model CalvingHistory {
+  id             String    @id @default(uuid())
+  cowId          String
+  cow            Cow       @relation(fields: [cowId], references: [id], onDelete: Cascade)
+  pregnancyId    String
+  pregnancy      Pregnancy @relation(fields: [pregnancyId], references: [id], onDelete: Cascade)
+  calvingDate    DateTime
+  calfGender     String    @default("FEMALE") // MALE, FEMALE
+  calfTagNumber  String?   @unique
+  status         String    @default("ALIVE") // ALIVE, STILLBORN
+  notes          String?
+}
+
+// Milk Collection & Quality & Sales
+model MilkCollection {
+  id             String        @id @default(uuid())
+  cowId          String?
+  cow            Cow?          @relation(fields: [cowId], references: [id], onDelete: SetNull)
+  quantity       Decimal       @db.Decimal(5, 2) // Liters
+  shift          String        // MORNING, EVENING
+  date           DateTime      @db.Date
+  fatPercentage  Decimal       @db.Decimal(4, 2)
+  snfPercentage  Decimal       @db.Decimal(4, 2)
+  temperature    Decimal?      @db.Decimal(4, 2) // Celsius
+  collectedBy    String?       // Employee name or reference
+  notes          String?
+  qualityRecords MilkQuality[]
+}
+
+model MilkQuality {
+  id           String         @id @default(uuid())
+  collectionId String
+  collection   MilkCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  fatPercent   Decimal        @db.Decimal(4, 2)
+  snfPercent   Decimal        @db.Decimal(4, 2)
+  density      Decimal        @db.Decimal(5, 4)
+  acidity      Decimal?       @db.Decimal(3, 2)
+  status       String         @default("GOOD") // EXCELLENT, GOOD, FAIR, POOR
+}
+
+model MilkSale {
+  id            String   @id @default(uuid())
+  customerId    String
+  customer      Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  date          DateTime
+  quantity      Decimal  @db.Decimal(6, 2) // Liters
+  ratePerLiter  Decimal  @db.Decimal(5, 2)
+  totalAmount   Decimal  @db.Decimal(10, 2)
+  paymentStatus String   @default("UNPAID") // PAID, UNPAID, PARTIAL
+  invoiceId     String?  @unique
+  invoice       Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+}
+
+// Inventory & Supply Chain
+model FeedInventory {
+  id                 String    @id @default(uuid())
+  name               String
+  quantity           Decimal   @db.Decimal(10, 2) // kg
+  minQuantityAlert   Decimal   @db.Decimal(10, 2) // kg
+  unitPrice          Decimal   @db.Decimal(8, 2)
+  supplierId         String?
+  supplier           Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  lastRestocked      DateTime?
+  expiryDate         DateTime?
+  notes              String?
+}
+
+model MedicineInventory {
+  id                 String    @id @default(uuid())
+  name               String
+  batchNumber        String
+  quantity           Int
+  minQuantityAlert   Int
+  unitPrice          Decimal   @db.Decimal(8, 2)
+  supplierId         String?
+  supplier           Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  lastRestocked      DateTime?
+  expiryDate         DateTime?
+  notes              String?
+}
+
+model Equipment {
+  id              String    @id @default(uuid())
+  name            String
+  serialNumber    String?   @unique
+  purchaseDate    DateTime
+  cost            Decimal   @db.Decimal(10, 2)
+  status          String    @default("OPERATIONAL") // OPERATIONAL, UNDER_MAINTENANCE, BROKEN
+  lastServiceDate DateTime?
+  nextServiceDate DateTime?
+}
+
+model Supplier {
+  id                 String              @id @default(uuid())
+  name               String
+  contactPerson      String?
+  email              String?
+  phone              String
+  address            String?
+  createdAt          DateTime            @default(now())
+  feedInventories    FeedInventory[]
+  medicineInventories MedicineInventory[]
+  purchaseOrders     PurchaseOrder[]
+  invoices           Invoice[]
+}
+
+model PurchaseOrder {
+  id                   String    @id @default(uuid())
+  supplierId           String
+  supplier             Supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  orderDate            DateTime  @default(now())
+  expectedDeliveryDate DateTime?
+  totalAmount          Decimal   @db.Decimal(10, 2)
+  status               String    @default("PENDING") // PENDING, SHIPPED, DELIVERED, CANCELLED
+  items                String?   // JSON representation of ordered items
+}
+
+// Customers & Financials
+model Customer {
+  id        String     @id @default(uuid())
+  name      String
+  email     String?    @unique
+  phone     String
+  address   String?
+  createdAt DateTime   @default(now())
+  milkSales MilkSale[]
+  incomes   Income[]
+  invoices  Invoice[]
+}
+
+model SalesOrder {
+  id          String   @id @default(uuid())
+  customerId  String
+  orderDate   DateTime @default(now())
+  status      String   @default("PENDING") // PENDING, DELIVERED, CANCELLED
+  totalAmount Decimal  @db.Decimal(10, 2)
+}
+
+model Invoice {
+  id            String    @id @default(uuid())
+  invoiceNumber String    @unique // e.g. INV-20260701-0001
+  invoiceDate   DateTime
+  dueDate       DateTime
+  totalAmount   Decimal   @db.Decimal(10, 2)
+  paidAmount    Decimal   @default(0) @db.Decimal(10, 2)
+  balanceAmount Decimal   @db.Decimal(10, 2)
+  status        String    @default("UNPAID") // PAID, PARTIAL, UNPAID
+  customerId    String?
+  customer      Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  supplierId    String?
+  supplier      Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  type          String    // SALE, PURCHASE
+  createdAt     DateTime  @default(now())
+  milkSales     MilkSale?
+  expenses      Expense[]
+  incomes       Income[]
+}
+
+model Expense {
+  id           String   @id @default(uuid())
+  category     String   // FEED, MEDICINE, SALARY, UTILITIES, EQUIPMENT, VET, OTHER
+  amount       Decimal  @db.Decimal(10, 2)
+  date         DateTime @db.Date
+  description  String?
+  invoiceId    String?
+  invoice      Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  recordedById String
+  recordedBy   User     @relation(fields: [recordedById], references: [id])
+}
+
+model Income {
+  id           String   @id @default(uuid())
+  source       String   // MILK_SALES, CATTLE_SALES, OTHER
+  amount       Decimal  @db.Decimal(10, 2)
+  date         DateTime @db.Date
+  description  String?
+  invoiceId    String?
+  invoice      Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  recordedById String
+  recordedBy   User     @relation(fields: [recordedById], references: [id])
+  customerId   String?
+  customer     Customer? @relation(fields: [customerId], references: [id])
+}
+
+// System, Logging & AI
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   // VACCINATION, INVENTORY, FINANCE, ALERT, TASK
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Report {
+  id           String   @id @default(uuid())
+  name         String
+  type         String   // PDF, EXCEL, CSV
+  url          String
+  generatedById String
+  generatedBy   User     @relation(fields: [generatedById], references: [id])
+  createdAt    DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String
+  details   String?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+}
+
+model ActivityLog {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activityType String
+  description  String
+  timestamp    DateTime @default(now())
+}
+
+model Setting {
+  id        String @id @default(uuid())
+  key       String @unique
+  value     String
+  group     String // SYSTEM, EMAIL, NOTIFICATION, BACKUP
+}
+
+model Weather {
+  id          String   @id @default(uuid())
+  date        DateTime @db.Date @unique
+  temperature Decimal  @db.Decimal(4, 2)
+  humidity    Decimal  @db.Decimal(4, 2)
+  rainfall    Decimal  @db.Decimal(4, 2)
+  forecast    String
+}
+
+model AIRecommendation {
+  id              String   @id @default(uuid())
+  cowId           String?
+  cow             Cow?     @relation(fields: [cowId], references: [id], onDelete: SetNull)
+  category        String   // HEALTH, FEED, BREEDING, PRODUCTION
+  recommendation  String
+  confidenceScore Decimal  @db.Decimal(3, 2)
+  createdAt       DateTime @default(now())
+}

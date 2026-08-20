@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: abf_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: cowfarm_admin
+      POSTGRES_PASSWORD: cowfarm_password123
+      POSTGRES_DB: cowfarm_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cowfarm_admin -d cowfarm_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: abf_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  localstack:
+    image: localstack/localstack:latest
+    container_name: abf_localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3
+      - DEFAULT_REGION=us-east-1
+      - DATA_DIR=/tmp/localstack
+    volumes:
+      - localstack_data:/var/lib/localstack
+      - ./scripts/localstack-init.sh:/etc/localstack/init/ready.d/init-s3.sh
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: abf_backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://cowfarm_admin:cowfarm_password123@postgres:5432/cowfarm_db?schema=public
+      - DIRECT_URL=postgresql://cowfarm_admin:cowfarm_password123@postgres:5432/cowfarm_db?schema=public
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=your_jwt_access_secret_signature_minimum_32_characters
+      - JWT_REFRESH_SECRET=your_jwt_refresh_secret_signature_minimum_32_characters
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=mock-key-id
+      - AWS_SECRET_ACCESS_KEY=mock-secret-access-key
+      - AWS_S3_BUCKET_NAME=cowfarm-assets
+      - AWS_USE_LOCALSTACK=true
+      - AWS_ENDPOINT=http://localstack:4566
+      - CORS_ORIGIN=http://localhost:3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: abf_web
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000/api
+      - PORT=3000
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  redis_data:
+  localstack_data:
