@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Lock, Mail, Shield, Eye, EyeOff } from 'lucide-react';
+import { apiFetch } from '../../utils/api';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,9 +20,8 @@ export default function LoginPage() {
 
     try {
       // Simulate backend authentication request
-      const res = await fetch('http://localhost:5000/api/auth/login', {
+      const res = await apiFetch('/api/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 

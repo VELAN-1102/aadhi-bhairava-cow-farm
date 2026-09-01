@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: aadhi-bhairava-cow-farm
+  labels:
+    name: aadhi-bhairava-cow-farm
+    environment: production

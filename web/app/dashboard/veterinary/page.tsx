@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Calendar, Heart, ShieldAlert, Award, FileText } from 'lucide-react';
+import { apiFetch } from '../../utils/api';
 
 export default function VeterinaryPage() {
   const [medicalRecords, setMedicalRecords] = useState<any[]>([]);
@@ -39,15 +40,15 @@ export default function VeterinaryPage() {
     setLoading(true);
     try {
       if (activeTab === 'medical') {
-        const res = await fetch('http://localhost:5000/api/vet/medical');
+        const res = await apiFetch('/api/vet/medical');
         const data = await res.json();
         if (res.ok) setMedicalRecords(data.data.data);
       } else if (activeTab === 'vaccination') {
-        const res = await fetch('http://localhost:5000/api/vet/vaccination');
+        const res = await apiFetch('/api/vet/vaccination');
         const data = await res.json();
         if (res.ok) setVaccinations(data.data.data);
       } else {
-        const res = await fetch('http://localhost:5000/api/vet/disease');
+        const res = await apiFetch('/api/vet/disease');
         const data = await res.json();
         if (res.ok) setDiseases(data.data);
       }
@@ -78,12 +79,8 @@ export default function VeterinaryPage() {
     e.preventDefault();
     setMessage(null);
     try {
-      const res = await fetch('http://localhost:5000/api/vet/medical', {
+      const res = await apiFetch('/api/vet/medical', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        },
         body: JSON.stringify({ ...formData, date: new Date().toISOString() })
       });
       const data = await res.json();
@@ -103,12 +100,8 @@ export default function VeterinaryPage() {
     e.preventDefault();
     setMessage(null);
     try {
-      const res = await fetch('http://localhost:5000/api/vet/vaccination', {
+      const res = await apiFetch('/api/vet/vaccination', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        },
         body: JSON.stringify(vaccineData)
       });
       const data = await res.json();

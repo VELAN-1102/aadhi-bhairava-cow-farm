@@ -1,0 +1,45 @@
+# Production Checklist - Aadhi Bhairava Cow Farm
+
+Verification checklist for staging and production deployments.
+
+- [x] **Database**
+  - [x] Prisma schema model constraints validated (`npx prisma validate`)
+  - [x] Migrations deployable using `npx prisma migrate deploy`
+  - [x] Seed scripts populate breeds, roles, and default permissions
+  - [x] Connection strings separation (`DATABASE_URL` for transaction pooling vs `DIRECT_URL` for migration scripts)
+- [x] **Authentication**
+  - [x] JWT access tokens and HTTPOnly refresh tokens verified
+  - [x] Server-side password encryption with bcryptjs
+  - [x] Expiration handlers and automatic token refresh logic active
+- [x] **Authorization & RBAC**
+  - [x] Express middleware enforcing permissions on all API endpoints (`requirePermissions`)
+  - [x] Role-based navigation guards in frontend dashboard layout
+- [x] **API Layer**
+  - [x] Endpoints modularized across sub-routers (cows, milk, vet, employees, inventory, finance, system)
+  - [x] Health check endpoint `/health` verifying PostgreSQL database connection
+  - [x] Dynamic base URL resolution using `NEXT_PUBLIC_API_URL`
+- [x] **Web Application**
+  - [x] Next.js 15 production build (`next build`) compiles without errors
+  - [x] Responsive layout across desktop, tablet, and mobile displays
+  - [x] Loading states, error states, and empty states handled
+  - [x] Copyright branding for Velan MCA integrated across footers and dialogs
+- [x] **Mobile Application**
+  - [x] React Native + Expo structure configured
+  - [x] SQLite offline cache and SecureStore token persistence ready
+- [x] **Security**
+  - [x] Secrets excluded from git (`.gitignore` protects `.env` files)
+  - [x] `.env.example` templates created for all modules
+  - [x] Non-root execution enabled in production Dockerfiles
+  - [x] CORS origin policy restricted to production domain
+- [x] **Docker & Containerization**
+  - [x] Multi-stage production `Dockerfile` for Backend (`node:20-alpine`)
+  - [x] Multi-stage production `Dockerfile` for Web (`standalone` runner)
+  - [x] `docker-compose.yml` for local dev (Postgres, Redis, LocalStack)
+  - [x] `docker-compose.prod.yml` for container registry deployment
+- [x] **Kubernetes Infrastructure**
+  - [x] Manifests created in `k8s/` (`namespace`, `configmap`, `secrets.example`, `postgres`, `backend`, `web`, `services`, `ingress`, `hpa`)
+- [x] **CI/CD**
+  - [x] GitHub Actions workflows configured for type checks and automated deployments
+- [x] **Documentation**
+  - [x] `README.md` updated with setup guides and copyright information
+  - [x] Technical playbooks present in `docs/` folder

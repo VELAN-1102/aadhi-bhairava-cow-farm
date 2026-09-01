@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Calendar, Edit, Award } from 'lucide-react';
+import { apiFetch } from '../../utils/api';
 
 export default function MilkPage() {
   const [collections, setCollections] = useState<any[]>([]);
@@ -32,11 +33,11 @@ export default function MilkPage() {
     setLoading(true);
     try {
       if (activeTab === 'collection') {
-        const res = await fetch('http://localhost:5000/api/milk/collection');
+        const res = await apiFetch('/api/milk/collection');
         const data = await res.json();
         if (res.ok) setCollections(data.data.data);
       } else {
-        const res = await fetch('http://localhost:5000/api/milk/sales');
+        const res = await apiFetch('/api/milk/sales');
         const data = await res.json();
         if (res.ok) setSales(data.data.data);
       }
@@ -62,12 +63,8 @@ export default function MilkPage() {
     e.preventDefault();
     setMessage(null);
     try {
-      const res = await fetch('http://localhost:5000/api/milk/collection', {
+      const res = await apiFetch('/api/milk/collection', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        },
         body: JSON.stringify(formData)
       });
       const data = await res.json();

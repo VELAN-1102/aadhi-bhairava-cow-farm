@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Plus, QrCode, X, Calendar, Edit, Trash2 } from 'lucide-react';
+import { apiFetch } from '../../utils/api';
 
 export default function CowsPage() {
   const [cows, setCows] = useState<any[]>([]);
@@ -37,7 +38,7 @@ export default function CowsPage() {
 
   const fetchBreeds = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/cows/breeds');
+      const res = await apiFetch('/api/cows/breeds');
       const data = await res.json();
       if (res.ok) setBreeds(data.data);
     } catch (err) {
@@ -60,7 +61,7 @@ export default function CowsPage() {
         status: statusFilter,
         breedId: breedFilter
       });
-      const res = await fetch(`http://localhost:5000/api/cows?${query}`);
+      const res = await apiFetch(`/api/cows?${query}`);
       const data = await res.json();
       if (res.ok) {
         setCows(data.data.data);
@@ -89,12 +90,8 @@ export default function CowsPage() {
     e.preventDefault();
     setMessage(null);
     try {
-      const res = await fetch('http://localhost:5000/api/cows', {
+      const res = await apiFetch('/api/cows', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        },
         body: JSON.stringify(formData)
       });
       const data = await res.json();
