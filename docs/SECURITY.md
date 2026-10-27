@@ -1,23 +1,19 @@
-# Security Practices - Aadhi Bhairava Cow Farm
+# Aadhi Bhairava Cow Farm — Enterprise Security Specification
 
-This document outlines key security protocols, configuration rules, and scanning processes.
+> **Security & Access Control Manual**  
+> *© 2026 Velan. All Rights Reserved. Designed, Architected & Developed by VELAN, MCA, Software Engineer.*
 
-## DevSecOps Protocols
+---
 
-1. **Non-Root Execution**: Both `backend` and `web` containers run under non-privileged users (`node` and `nextjs` respectively).
-2. **Secrets Prevention**: Sensitive passwords, keys, or credentials must never be committed to Git. Files like `.env` and `.env.local` are blocked in `.gitignore`.
-3. **Helmet Security Headers**: Express app utilizes custom headers to block XSS injections, clickjacking, and mime-sniffing:
-   - `X-Frame-Options: DENY`
+## 1. Security Architecture Controls
+
+1. **Password Hashing**: Uses `bcryptjs` with salt rounds = 10. Raw passwords are never stored in plain text.
+2. **JWT Token Security**: Access tokens expire in 15 minutes; refresh tokens expire in 7 days. Automatic refresh handling on status 401.
+3. **Role-Based Access Control (RBAC)**: Fine-grained permission verification enforced by `requirePermissions` middleware.
+4. **CORS Protection**: Restricted to configured origins (`CORS_ORIGIN`).
+5. **Security Headers**: Standard headers injected on Express responses:
    - `X-Content-Type-Options: nosniff`
-   - `Content-Security-Policy`
-
-## CORS Policy
-
-In production, CORS is locked down. The server only listens to validated frontend origins:
-- `CORS_ORIGIN="https://www.aadhibhairavacowfarm.com"`
-
-## Dependency Audit
-
-Continuous integration pipelines run:
-- `npm audit --audit-level=high`
-- Automatically check code files for leaked secrets prior to package updates.
+   - `X-Frame-Options: DENY`
+   - `X-XSS-Protection: 1; mode=block`
+   - `Strict-Transport-Security: max-age=31536000`
+6. **Audit Trail Logging**: Database table `AuditLog` captures user ID, timestamp, action type, IP address, and user agent.

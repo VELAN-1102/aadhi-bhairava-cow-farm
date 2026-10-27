@@ -1,124 +1,96 @@
-# Aadhi Bhairava Cow Farm – Enterprise Dairy Farm Management System
+# Aadhi Bhairava Cow Farm — Enterprise Dairy Farm Management System
 
-> "Smart Dairy. Smarter Farming."
-
-Aadhi Bhairava Cow Farm is an enterprise-grade, clean-architecture smart dairy platform designed to monitor cattle profiles, daily milk collection shifts, veterinary health logs, warehouse feeds/meds inventory, financial bookkeeping ledger accounts, and employee schedules.
-
----
-
-## 🛠️ Technology Stack
-
-- **Backend API Server**: Node.js + Express.js + TypeScript
-- **Database Layer**: PostgreSQL (neon.tech / local) + Prisma ORM + Redis Cache
-- **Web Portal**: Next.js 15 + React 19 + Tailwind CSS
-- **Mobile Client**: React Native + Expo + SQLite Offline Sync + Camera QR Scanner
-- **Infrastructure**: Docker Multi-stage containers, LocalStack Mock S3 Client, PM2 Process Cluster Manager
+> **Tagline**: Healthy Cows, Happy Future  
+> *© 2026 Velan. All Rights Reserved. Designed, Architected & Developed by VELAN, MCA, Software Engineer.*
 
 ---
 
-## 📁 Workspace Folder Structure
+## 1. Overview
 
-```
-aadhi-bhairava-cow-farm/
-├── backend/
-│   ├── src/
-│   │   ├── controllers/      # Express route controllers
-│   │   ├── interfaces/       # Service/Repository layer abstraction contracts
-│   │   ├── middlewares/      # JWT, Refresh Tokens, and RBAC validators
-│   │   ├── repositories/     # Concrete Prisma database queries
-│   │   ├── routes/           # Endpoint modules (cows, milk, employees, vet, etc.)
-│   │   ├── services/         # Core business logic rules
-│   │   └── utils/            # Winston logger, error wrappers, S3 client
-│   ├── prisma/               # Schema models & Upsert seeds script
-│   ├── Dockerfile            # Multi-stage production container setup
-│   └── ecosystem.config.js   # PM2 Cluster mode settings
-├── web/
-│   ├── app/                  # Next.js 15 App router (cows, milk, finance, vet pages)
-│   ├── public/               # Static assets & icons
-│   └── Dockerfile            # Standalone runner container setup
-├── mobile/                   # React Native Expo app container
-├── docs/                     # Operations and architecture guides
-└── docker-compose.yml        # Orchestration configurations for local services
-```
+**Aadhi Bhairava Cow Farm** is an enterprise-grade, production-ready, India-compliant dairy farm management platform. The system combines modern software engineering (Next.js 15, Node.js Express REST API, PostgreSQL, Prisma ORM, Docker, Kubernetes) with agricultural excellence to manage livestock, milk collection quality, veterinary care, employee payroll, supply chain inventory, and statutory compliance.
 
 ---
 
-## ⚙️ Environment Configuration
+## 2. Key Modules & Features
 
-Copy the sample configurations templates:
+- **Livestock Management**: Ear-tag ID tracking, indigenous & commercial breeds (Gir, Sahiwal, Hallikar, Ongole, Murrah), date of birth, weight histories, and maternal lineage.
+- **Milk Production & Quality**: Morning & evening shift collection logs, Fat %, SNF %, temperature logs, and commercial customer dispatches.
+- **Veterinary Clinical Diaries**: Scheduled vaccinations (FMD, HS, BQ), disease diagnoses, antibiotic treatment diaries, and mandatory withdrawal period tracking.
+- **Breeding & Calving**: AI breeding dates, bull tag tracking, expected calving date calculations, pregnancy monitoring, and calf birth logs.
+- **Supply Chain & Inventory**: Green fodder, dry feed, concentrate reorder alerts, veterinary medicines, equipment maintenance, and purchase orders.
+- **Financial Ledgers & Payroll**: Customer invoices, income & expense entries, employee attendance register, and basic salary/allowance calculations.
+- **Compliance Readiness Framework**: Pre-configured support for FSSAI food safety chilling standards (4°C limit), Legal Metrology packaging metadata, MeitY DPDP Act 2023 privacy controls, and GST tax invoice breakdowns.
+
+---
+
+## 3. Technology Stack
+
+- **Frontend**: Next.js 15.1, React 19, TypeScript 5.3, Tailwind CSS 3.4.
+- **Backend**: Node.js 20, Express 4.18, TypeScript 5.3, Prisma ORM 5.10.
+- **Database**: PostgreSQL 15 (27 domain relational models).
+- **Storage**: AWS S3 (`cowfarm-assets`) with local disk fallback (`uploads/`).
+- **Containerization & Deployment**: Docker multi-stage images, Kubernetes manifests (`/k8s`), Vercel edge deployment, GitHub Actions (`.github/workflows`).
+
+---
+
+## 4. Getting Started (Development Mode)
+
+### Prerequisites
+- Node.js 20+
+- PostgreSQL 15+
+- npm 10+
+
+### Step 1: Clone Repository & Install Dependencies
 ```bash
-cp .env.example .env
-cp backend/.env.example backend/.env
-cp web/.env.example web/.env
-```
+# Backend Setup
+cd backend
+npm install
+npx prisma generate
 
-Ensure the following critical parameters are populated:
-- `DATABASE_URL`: Connection pool string targeting PostgreSQL.
-- `JWT_SECRET` / `JWT_REFRESH_SECRET`: Encrypting keys for auth tokens.
-- `REDIS_URL`: Endpoint for queue cache storage.
-- `AWS_S3_BUCKET_NAME`: Target cloud storage container name.
-
----
-
-## 🚀 Running the Application
-
-### Local Database Setup & Seed
-1. Install dependencies:
-   ```bash
-   cd backend
-   npm install
-   ```
-2. Apply database migrations:
-   ```bash
-   npx prisma migrate dev
-   ```
-3. Run seeds:
-   ```bash
-   npx prisma db seed
-   ```
-
-### Running Backend API
-```bash
-npm run dev
-```
-
-### Running Web UI
-```bash
+# Frontend Setup
 cd ../web
 npm install --legacy-peer-deps
-npm run dev
 ```
 
----
-
-## 🐳 Docker Deployment
-
-To launch the complete infrastructure cluster (Postgres, Redis, LocalStack, Express Backend, NextJS Frontend) locally:
+### Step 2: Seed Database
 ```bash
-docker-compose up --build -d
+cd backend
+$env:DATABASE_URL="postgresql://postgres:postgres@localhost:5432/cowfarm_db?schema=public"
+npx prisma migrate dev
+npm run prisma:seed
 ```
 
+### Step 3: Run Development Servers
+```bash
+# Backend Terminal (Port 5000)
+cd backend && npm run dev
+
+# Web Frontend Terminal (Port 3000)
+cd web && npm run dev
+```
+
+### Demo Login Credentials
+- **Email**: `admin@cowfarm.com`
+- **Password**: `admin123`
+
 ---
 
-## 🔒 Security & Disaster Recovery
-
-- **Token Validation**: Uses double-token verification (short-lived access token + secure HTTPOnly refresh tokens) with RBAC permissions checking.
-- **Backups**: Standard backup routines are detailed in [DATABASE.md](file:///C:/Users/Harinath/.gemini/antigravity/scratch/aadhi-bhairava-cow-farm/docs/DATABASE.md).
-- **Rollback Plans**: Expressed in [DISASTER_RECOVERY.md](file:///C:/Users/Harinath/.gemini/antigravity/scratch/aadhi-bhairava-cow-farm/docs/DISASTER_RECOVERY.md).
+## 5. System Health Check
+- Health Check: `GET http://localhost:5000/health`
+- Liveness Probe: `GET http://localhost:5000/liveness`
+- Readiness Probe: `GET http://localhost:5000/readiness`
 
 ---
 
-## 📄 Licensing & Intellectual Copyrights
+## 6. Documentation Index
+- [Architecture Guide](docs/architecture.md)
+- [Compliance Matrix](docs/compliance/compliance-matrix.md)
+- [Deployment Manual](docs/deployment.md)
+- [Security Specification](docs/security.md)
+- [Database Schema](docs/database.md)
+- [API Manual](docs/api.md)
 
-Copyright © 2026 Velan. All Rights Reserved.
+---
 
-The Aadhi Bhairava Cow Farm – Enterprise Dairy Farm Management System, including all source code, database schema, application architecture, documentation, APIs, user interface designs, mobile applications, cloud infrastructure, and related assets, is the intellectual property of Velan.
-
-Designed, Architected & Developed by:
-**VELAN**
-Master of Computer Applications (MCA)
-Software Engineer
-
-Contact: `+91 93444 60611`
-
-Unauthorized copying, reproduction, modification, redistribution, reverse engineering, or commercial use of this software is strictly prohibited without prior written permission from the copyright owner.
+## 7. Copyright & License
+*© 2026 Velan. All Rights Reserved. Designed, Architected & Developed by VELAN, MCA, Software Engineer.*

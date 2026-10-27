@@ -1,29 +1,59 @@
-# System Architecture - Aadhi Bhairava Cow Farm
+# Aadhi Bhairava Cow Farm — Enterprise System Architecture
 
-This document outlines the software design, patterns, and principles applied across the platform.
+> **System Architecture & Design Document**  
+> *© 2026 Velan. All Rights Reserved. Designed, Architected & Developed by VELAN, MCA, Software Engineer.*
 
-## Design Principles
+---
 
-We follow **Clean Architecture**, **SOLID**, **DRY** (Don't Repeat Yourself), and **DDD** (Domain Driven Design) guidelines.
+## 1. Executive Summary
 
-- **Separation of Concerns**: Clearly divided folders separating Web UI, Mobile clients, Backend server logic, and Database mappings.
-- **Repository Pattern**: All database access is decoupled from services and controllers using repositories.
-- **Service Layer Pattern**: Core business models logic, checks, and calculations are kept within dedicated service files.
+The **Aadhi Bhairava Cow Farm Enterprise Platform** is a multi-tier dairy management system designed to track cattle herds, milk collection telemetry, veterinary clinical diagnostics, breeding timelines, inventory reorders, financial ledgers, and Indian regulatory compliance (FSSAI, Legal Metrology, MeitY DPDP Act 2023, GST).
 
-## Monorepo Layout
+---
 
+## 2. High-Level Topology
+
+```text
+                  [ CLIENT LAYER ]
+      ┌───────────────────┴───────────────────┐
+      │                                       │
+      ▼                                       ▼
+┌─────────────────────────┐       ┌─────────────────────────┐
+│ Next.js 15 Web App      │       │ React Native / Expo     │
+│ (Vercel Edge Platform)  │       │ Mobile Application      │
+└────────────┬────────────┘       └────────────┬────────────┘
+             │                                 │
+             └────────────────┬────────────────┘
+                              │ HTTPS / REST API
+                              ▼
+               ┌─────────────────────────────┐
+               │ NGINX Ingress Controller    │
+               │ (Cert-Manager TLS)          │
+               └──────────────┬──────────────┘
+                              │ Port 5000
+                              ▼
+               ┌─────────────────────────────┐
+               │ Kubernetes Pod Cluster      │
+               │ Namespace: cow-farm         │
+               │ Express 4 + Node 20 Runtime │
+               └──────────────┬──────────────┘
+                              │
+             ┌────────────────┴────────────────┐
+             │ Prisma ORM                      │ AWS SDK / Local Disk
+             ▼                                 ▼
+┌─────────────────────────┐       ┌─────────────────────────┐
+│ Managed PostgreSQL 15   │       │ AWS S3 Bucket           │
+│ (Encrypted Storage)     │       │ ("cowfarm-assets")      │
+└─────────────────────────┘       └─────────────────────────┘
 ```
-aadhi-bhairava-cow-farm/
-├── backend/
-│   ├── prisma/             # Schema mappings and seed scripts
-│   └── src/
-│       ├── controllers/    # Express route request handlers
-│       ├── interfaces/     # Repository/Service contracts
-│       ├── middlewares/    # Request authentication filters
-│       ├── repositories/   # Concrete database querying classes
-│       ├── routes/         # Mounted REST API endpoints
-│       └── services/       # Core business workflows
-├── mobile/                 # React Native + Expo App
-├── web/                    # Next.js 15 Web Application
-└── docs/                   # System design & operations manuals
-```
+
+---
+
+## 3. Technology Stack
+
+- **Web Frontend**: Next.js 15.1, React 19, TypeScript 5.3, Tailwind CSS 3.4.
+- **Backend Service**: Node.js 20, Express 4.18, TypeScript 5.3, Prisma ORM 5.10.
+- **Database**: PostgreSQL 15 with 27 relational domain models.
+- **Storage**: AWS S3 (`cowfarm-assets`) with fallback to local `./uploads` disk storage.
+- **Containerization**: Docker (multi-stage non-root images) & Kubernetes 1.28+ (`/k8s`).
+- **CI/CD Pipeline**: GitHub Actions (`.github/workflows/ci.yml` & `deploy.yml`).
